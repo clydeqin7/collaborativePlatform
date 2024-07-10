@@ -1,6 +1,6 @@
 package com.fe4fun;
 
-import com.fe4fun.service.User;
+import com.fe4fun.entity.User;
 import com.fe4fun.service.UserService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
