@@ -47,11 +47,8 @@ public class AuthController {
     @PostMapping("/auth/login")
     @ResponseBody
     public Result login(@RequestBody Map<String, Object> usernameAndPassword) {
-        String username = usernameAndPassword.get("username")
-                                             .toString();
-        String password = usernameAndPassword.get("password")
-                                             .toString();
-
+        String username = usernameAndPassword.get("username").toString();
+        String password = usernameAndPassword.get("password").toString();
 
         UserDetails userDetails = null;
         try {

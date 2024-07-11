@@ -19,14 +19,6 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
-    public User(Integer id, String username) {
-        this.id = id;
-        this.username = username;
-        this.avatar = "";
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
     public void setId(Integer id) {
         this.id = id;
     }

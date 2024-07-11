@@ -1,6 +1,7 @@
 package com.fe4fun.service;
 
 import com.fe4fun.entity.User;
+import com.fe4fun.mapper.UserMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,33 +16,32 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class UserService implements UserDetailsService {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private UserMapper userMapper;
     private Map<String, User> users = new ConcurrentHashMap<>();
 
     @Inject
-    public UserService(BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UserService(BCryptPasswordEncoder bCryptPasswordEncoder, UserMapper userMapper) {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        save("gebilaowang", "gebilaowang");
+        this.userMapper = userMapper;
+//        save("user", "password");
     }
 
     public void save(String username, String password) {
-        users.put(username, new User(1, username, bCryptPasswordEncoder.encode(password)));
+        userMapper.save(username, bCryptPasswordEncoder.encode(password));
     }
 
-//    public User getUserById(Integer id) {
-//        return null;
-//    }
-
     public User getUserByUsername(String userName) {
-        return users.get(userName);
+        return userMapper.getUserByUsername(userName);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (!users.containsKey(username)) {
+        User user = getUserByUsername(username);
+        if (user == null) {
             throw new UsernameNotFoundException(username + "不存在");
         }
-        User user = users.get(username);
 
-        return new org.springframework.security.core.userdetails.User(username, user.getEncryptedPassword(), Collections.emptyList());
+        return new org.springframework.security.core.userdetails.User(
+                username, user.getEncryptedPassword(), Collections.emptyList());
     }
 }
