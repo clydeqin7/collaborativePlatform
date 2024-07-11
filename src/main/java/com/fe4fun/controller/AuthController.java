@@ -1,6 +1,7 @@
 package com.fe4fun.controller;
 
 import com.fe4fun.entity.User;
+import com.fe4fun.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,45 +20,55 @@ import java.util.Map;
 
 @Controller
 public class AuthController {
-    private UserDetailsService userDetailsService;
+    private UserService userService;
     private AuthenticationManager authenticationManager;
 
     @Inject
-    public AuthController(UserDetailsService userDetailsService, AuthenticationManager authenticationManager) {
-        this.userDetailsService = userDetailsService;
+    public AuthController(AuthenticationManager authenticationManager, UserService userService) {
         this.authenticationManager = authenticationManager;
+        this.userService = userService;
     }
-
 
 
     @GetMapping("/auth")
     @ResponseBody
     public Object auth() {
-        return new Result("fail", "未获取到信息", false);
+        String username = SecurityContextHolder.getContext()
+                                               .getAuthentication()
+                                               .getName();
+        User loggedInUser = userService.getUserByUsername(username);
+        if (loggedInUser == null) {
+            return new Result("fail", "用户没有登录", false);
+        }
+
+        return new Result("ok", null, true, loggedInUser);
     }
 
     @PostMapping("/auth/login")
     @ResponseBody
-    public Result login(@RequestBody Map<String,Object> usernameAndPassword) {
-        String username = usernameAndPassword.get("username").toString();
-        String password = usernameAndPassword.get("password").toString();
+    public Result login(@RequestBody Map<String, Object> usernameAndPassword) {
+        String username = usernameAndPassword.get("username")
+                                             .toString();
+        String password = usernameAndPassword.get("password")
+                                             .toString();
 
 
         UserDetails userDetails = null;
         try {
-            userDetails = userDetailsService.loadUserByUsername(username);
+            userDetails = userService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-           return new Result("fail", "用户名不存在", false);
+            return new Result("fail", "用户名不存在", false);
         }
 
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails, password);
 
         try {
             authenticationManager.authenticate(token);
-            SecurityContextHolder.getContext().setAuthentication(token);
+            SecurityContextHolder.getContext()
+                                 .setAuthentication(token);
 
-            User loggedInUser = new User(1, "张收纳");
-            return new Result("ok", "登录成功", true, loggedInUser);
+            return new Result("ok", "登录成功", true,
+                    userService.getUserByUsername(username));
         } catch (BadCredentialsException e) {
             return new Result("fail", "密码不正确", false);
         }
@@ -79,7 +90,7 @@ public class AuthController {
 
 
         public Result(String status, String msg, boolean isLogin) {
-          this(status, msg, isLogin, null);
+            this(status, msg, isLogin, null);
         }
 
         public String getStatus() {
