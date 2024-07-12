@@ -1,5 +1,6 @@
 package com.fe4fun.controller;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fe4fun.entity.User;
 import com.fe4fun.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -72,16 +73,30 @@ public class AuthController {
 
     }
 
+    @PostMapping("/auth/register")
+    @ResponseBody
+    public Result register(@RequestBody Map<String, Object> usernameAndPassword) {
+        String username = usernameAndPassword.get("username").toString();
+        String password = usernameAndPassword.get("password").toString();
+
+        try {
+            userService.save(username, password);
+            User user = userService.getUserByUsername(username);
+            return new Result("ok", "注册成功", user);
+        } catch (Exception e) {
+            return new Result("fail", "注册失败");
+        }
+    }
+
     public static class Result {
         String status;
         String msg;
-        boolean isLogin;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         Object data;
 
         public Result(String status, String msg, boolean isLogin, Object data) {
             this.status = status;
             this.msg = msg;
-            this.isLogin = isLogin;
             this.data = data;
         }
 
@@ -90,16 +105,23 @@ public class AuthController {
             this(status, msg, isLogin, null);
         }
 
+        public Result(String status, String msg) {
+            this.status = status;
+            this.msg = msg;
+        }
+
+        public Result(String status, String msg, Object data) {
+            this.status = status;
+            this.msg = msg;
+            this.data = data;
+        }
+
         public String getStatus() {
             return status;
         }
 
         public String getMsg() {
             return msg;
-        }
-
-        public boolean isLogin() {
-            return isLogin;
         }
 
         public Object getData() {
