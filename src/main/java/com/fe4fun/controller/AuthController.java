@@ -45,6 +45,20 @@ public class AuthController {
         return new Result("ok", null, true, loggedInUser);
     }
 
+    @GetMapping("/auth/logout")
+    @ResponseBody
+    public Object logout() {
+        String username = SecurityContextHolder.getContext()
+                                               .getAuthentication()
+                                               .getName();
+        User loggedInUser = userService.getUserByUsername(username);
+        if (loggedInUser == null) {
+            return new Result("fail", "用户尚未登录");
+        }
+        SecurityContextHolder.clearContext();
+        return new Result("ok", "注销成功");
+    }
+
     @PostMapping("/auth/login")
     @ResponseBody
     public Result login(@RequestBody Map<String, Object> usernameAndPassword) {
@@ -75,9 +89,13 @@ public class AuthController {
 
     @PostMapping("/auth/register")
     @ResponseBody
-    public Result register(@RequestBody Map<String, Object> usernameAndPassword) {
-        String username = usernameAndPassword.get("username").toString();
-        String password = usernameAndPassword.get("password").toString();
+    public Result register(@RequestBody Map<String, String> usernameAndPassword) {
+        String username = usernameAndPassword.get("username");
+        String password = usernameAndPassword.get("password");
+
+        if (username == "" || password == "") {
+            return new Result("fail", "用户名或密码不能为空");
+        }
 
         try {
             userService.save(username, password);
